@@ -6,4 +6,5 @@ export const queryKeys = {
   sightingsByLine: (line: string) => ['sightings', 'line', line] as const,
   lines: ['lines'] as const,
   stationsByLine: (lineId: string) => ['lines', lineId, 'stations'] as const,
+  directionsByLine: (lineId: string) => ['lines', lineId, 'directions'] as const,
 };

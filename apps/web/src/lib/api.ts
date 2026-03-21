@@ -29,6 +29,11 @@ export interface ApiStation {
   name: string;
 }
 
+export interface ApiDirection {
+  terminus_first: string;
+  terminus_last: string;
+}
+
 export interface CreateSightingBody {
   line: string;
   station?: string;
@@ -60,6 +65,10 @@ export async function getLines(): Promise<ApiLine[]> {
 
 export async function getStationsByLine(lineId: string): Promise<ApiStation[]> {
   return apiFetch<ApiStation[]>(`/api/lines/${encodeURIComponent(lineId)}/stations`);
+}
+
+export async function getDirectionsByLine(lineId: string): Promise<ApiDirection[]> {
+  return apiFetch<ApiDirection[]>(`/api/lines/${encodeURIComponent(lineId)}/directions`);
 }
 
 export async function createSighting(data: CreateSightingBody): Promise<ApiSighting> {

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import {
   getLines,
   getStationsByLine,
+  getDirectionsByLine,
   createSighting,
   type CreateSightingBody,
 } from '../lib/api';
@@ -40,6 +41,13 @@ export default function ReportPage(): JSX.Element {
   const { data: stations } = useQuery({
     queryKey: queryKeys.stationsByLine(line),
     queryFn: () => getStationsByLine(line),
+    enabled: line.length > 0,
+  });
+
+  // Directions (terminus options) for the selected line
+  const { data: directions } = useQuery({
+    queryKey: queryKeys.directionsByLine(line),
+    queryFn: () => getDirectionsByLine(line),
     enabled: line.length > 0,
   });
 
@@ -96,8 +104,9 @@ export default function ReportPage(): JSX.Element {
     setLine(l);
     setLineQuery(l);
     setLineDropdownOpen(false);
-    // Reset station when line changes
+    // Reset dependent fields when line changes
     setStation('');
+    setDirection('');
   }
 
   function selectStation(name: string): void {
@@ -231,13 +240,37 @@ export default function ReportPage(): JSX.Element {
           <label className="text-xs text-zinc-500 uppercase tracking-widest block">
             Richtung
           </label>
-          <input
-            type="text"
-            value={direction}
-            onChange={(e) => setDirection(e.target.value)}
-            placeholder="z.B. Hütteldorf"
-            className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none"
-          />
+
+          {/* Dropdown when directions are available from DB */}
+          {directions !== undefined && directions.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {[directions[0]!.terminus_first, directions[0]!.terminus_last].map((terminus) => (
+                <button
+                  key={terminus}
+                  type="button"
+                  onClick={() => setDirection(direction === terminus ? '' : terminus)}
+                  className={`px-3 py-3 text-sm text-left border transition-colors font-mono truncate ${
+                    direction === terminus
+                      ? 'border-white text-white bg-white/10'
+                      : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+                  }`}
+                  title={terminus}
+                >
+                  → {terminus}
+                </button>
+              ))}
+            </div>
+          ) : (
+            /* Free-text fallback: no line selected, or line has no directions in DB */
+            <input
+              type="text"
+              value={direction}
+              onChange={(e) => setDirection(e.target.value)}
+              disabled={!line}
+              placeholder={line ? 'z.B. Hütteldorf' : 'Zuerst Linie auswählen'}
+              className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+            />
+          )}
         </div>
 
         {/* ── Typ ────────────────────────────────────────────── */}

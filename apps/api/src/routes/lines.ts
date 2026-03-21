@@ -13,6 +13,11 @@ interface DbStation {
   name: string;
 }
 
+interface DbDirection {
+  terminus_first: string;
+  terminus_last: string;
+}
+
 const linesRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/lines — all lines, sorted by type then id
@@ -47,6 +52,25 @@ const linesRoutes: FastifyPluginAsync = async (fastify) => {
         return result.rows;
       } catch (err) {
         fastify.log.error(err, 'Failed to fetch stations');
+        return reply.code(500).send({ error: 'Interner Fehler' });
+      }
+    },
+  );
+  // GET /api/lines/:lineId/directions — terminus stations for the Richtung dropdown
+  fastify.get<{ Params: { lineId: string } }>(
+    '/api/lines/:lineId/directions',
+    async (request, reply) => {
+      const { lineId } = request.params;
+
+      try {
+        const result = await db.query<DbDirection>(
+          'SELECT terminus_first, terminus_last FROM line_directions WHERE line_id = $1',
+          [lineId],
+        );
+        // Return empty array if no directions seeded for this line — frontend falls back to free text
+        return result.rows;
+      } catch (err) {
+        fastify.log.error(err, 'Failed to fetch directions');
         return reply.code(500).send({ error: 'Interner Fehler' });
       }
     },
