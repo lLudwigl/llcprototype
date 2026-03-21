@@ -18,6 +18,10 @@ build/
 # Progress logs — internal only, not for version control
 progresslogs/
 
+# Test files
+apps/api/src/bot/test.ts
+apps/api/.env
+
 # OS / editor
 .DS_Store
 Thumbs.db
