@@ -1,4 +1,38 @@
-/* Tailwind base layers — must be imported before any component styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Force dark terminal base across the entire app */
+  html,
+  body,
+  #root {
+    @apply bg-black text-white font-mono;
+    min-height: 100dvh;
+  }
+
+  /* Remove default focus outlines, replace with our own */
+  *:focus {
+    outline: none;
+  }
+
+  /* Scrollbar: minimal, dark */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: black;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46; /* zinc-700 */
+  }
+}
+
+@layer components {
+  /* Reusable bracket-style button */
+  .btn-terminal {
+    @apply font-mono uppercase tracking-widest border border-white text-white
+           px-4 py-2 text-sm transition-colors
+           hover:bg-white hover:text-black active:bg-zinc-200;
+  }
+}
