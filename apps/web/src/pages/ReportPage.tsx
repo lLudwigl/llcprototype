@@ -26,6 +26,8 @@ export default function ReportPage(): JSX.Element {
   const [direction, setDirection] = useState('');
   const [type, setType] = useState<'mobil' | 'stationär' | null>(null);
   const [description, setDescription] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingBody, setPendingBody] = useState<CreateSightingBody | null>(null);
 
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const stationContainerRef = useRef<HTMLDivElement>(null);
@@ -70,6 +72,7 @@ export default function ReportPage(): JSX.Element {
   const mutation = useMutation({
     mutationFn: createSighting,
     onSuccess: () => {
+      setShowConfirmModal(false);
       toast.success('Meldung eingereicht!');
       navigate('/');
     },
@@ -128,7 +131,15 @@ export default function ReportPage(): JSX.Element {
     if (type !== null) body.type = type;
     if (description.trim().length > 0) body.description = description.trim();
 
-    mutation.mutate(body);
+    // Show confirmation modal instead of submitting immediately
+    setPendingBody(body);
+    setShowConfirmModal(true);
+  }
+
+  function handleConfirm(): void {
+    if (pendingBody) {
+      mutation.mutate(pendingBody);
+    }
   }
 
   const isSubmitting = mutation.isPending;
@@ -341,6 +352,85 @@ export default function ReportPage(): JSX.Element {
           Anonym · Keine Registrierung erforderlich
         </p>
       </form>
+
+      {/* ── Confirmation modal ─────────────────────────────── */}
+      {showConfirmModal && pendingBody && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 px-4 pb-6 sm:pb-0">
+          <div className="w-full max-w-sm border border-zinc-700 bg-zinc-950 p-5 space-y-4">
+
+            <h2 className="text-xs font-bold uppercase tracking-widest border-b border-zinc-800 pb-3">
+              [ ! ] MELDUNG PRÜFEN
+            </h2>
+
+            {/* Summary rows */}
+            <dl className="space-y-2 text-sm font-mono">
+              <div className="flex justify-between gap-4">
+                <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Linie</dt>
+                <dd>
+                  <span className={`px-1.5 py-0.5 text-xs font-bold ${getLineBadgeClass(pendingBody.line)}`}>
+                    {pendingBody.line}
+                  </span>
+                </dd>
+              </div>
+
+              {pendingBody.station && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Station</dt>
+                  <dd className="text-zinc-200 text-right">{pendingBody.station}</dd>
+                </div>
+              )}
+
+              {pendingBody.direction && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Richtung</dt>
+                  <dd className="text-zinc-200 text-right">→ {pendingBody.direction}</dd>
+                </div>
+              )}
+
+              {pendingBody.type && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Typ</dt>
+                  <dd className={`text-xs font-bold uppercase ${pendingBody.type === 'mobil' ? 'text-yellow-400' : 'text-orange-400'}`}>
+                    {pendingBody.type === 'mobil' ? 'MOBIL' : 'STATIONÄR'}
+                  </dd>
+                </div>
+              )}
+
+              {pendingBody.description && (
+                <div className="flex flex-col gap-1">
+                  <dt className="text-zinc-500 uppercase tracking-wider text-xs">Beschreibung</dt>
+                  <dd className="text-zinc-300 text-xs leading-relaxed border-l border-zinc-700 pl-3">{pendingBody.description}</dd>
+                </div>
+              )}
+
+              {/* If only line was filled in */}
+              {!pendingBody.station && !pendingBody.direction && !pendingBody.type && !pendingBody.description && (
+                <p className="text-zinc-600 text-xs">Keine weiteren Details angegeben.</p>
+              )}
+            </dl>
+
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isSubmitting}
+                className="py-3 text-xs uppercase tracking-widest font-bold border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-40"
+              >
+                ← BEARBEITEN
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+                className="py-3 text-xs uppercase tracking-widest font-bold border border-white text-white hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? '[ … ]' : '[ SENDEN ]'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
