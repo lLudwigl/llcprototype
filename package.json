@@ -1,0 +1,20 @@
+{
+  "name": "schwarzkappler",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Real-time ticket controller tracker for Vienna public transit",
+  "scripts": {
+    "dev:web": "pnpm --filter @schwarzkappler/web dev",
+    "dev:api": "pnpm --filter @schwarzkappler/api dev",
+    "build": "pnpm --filter './apps/*' build",
+    "test": "pnpm --filter './packages/*' test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
