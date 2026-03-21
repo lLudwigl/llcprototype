@@ -1,68 +1,128 @@
-// Report form — lets users submit a new controller sighting.
-// Currently fires a success toast; API call will be wired up in a later task.
+// Report form — submits a new controller sighting to the API.
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import {
+  getLines,
+  getStationsByLine,
+  createSighting,
+  type CreateSightingBody,
+} from '../lib/api';
+import { queryKeys } from '../lib/queryKeys';
 import { ALL_LINES, getLineBadgeClass } from '../lib/lines';
 
 const MAX_DESC_LENGTH = 200;
 
 export default function ReportPage(): JSX.Element {
+  const navigate = useNavigate();
+
   const [line, setLine] = useState('');
   const [lineQuery, setLineQuery] = useState('');
   const [lineDropdownOpen, setLineDropdownOpen] = useState(false);
   const [station, setStation] = useState('');
+  const [stationDropdownOpen, setStationDropdownOpen] = useState(false);
   const [direction, setDirection] = useState('');
   const [type, setType] = useState<'mobil' | 'stationär' | null>(null);
   const [description, setDescription] = useState('');
 
   const lineContainerRef = useRef<HTMLDivElement>(null);
+  const stationContainerRef = useRef<HTMLDivElement>(null);
 
-  const lineMatches = lineQuery.trim().length === 0
-    ? ALL_LINES
-    : ALL_LINES.filter((l) =>
-        l.toLowerCase().startsWith(lineQuery.trim().toLowerCase())
-      );
+  // Lines from API — fall back to static list while loading
+  const { data: apiLines } = useQuery({
+    queryKey: queryKeys.lines,
+    queryFn: getLines,
+  });
+  const allLineIds: string[] = apiLines?.map((l) => l.id) ?? ALL_LINES;
 
-  // Close line dropdown when clicking outside
+  // Stations for the selected line — only fetch once a line is chosen
+  const { data: stations } = useQuery({
+    queryKey: queryKeys.stationsByLine(line),
+    queryFn: () => getStationsByLine(line),
+    enabled: line.length > 0,
+  });
+
+  const lineMatches =
+    lineQuery.trim().length === 0
+      ? allLineIds
+      : allLineIds.filter((l) =>
+          l.toLowerCase().startsWith(lineQuery.trim().toLowerCase()),
+        );
+
+  const stationMatches =
+    stations === undefined
+      ? []
+      : station.trim().length === 0
+        ? stations
+        : stations.filter((s) =>
+            s.name.toLowerCase().includes(station.trim().toLowerCase()),
+          );
+
+  const mutation = useMutation({
+    mutationFn: createSighting,
+    onSuccess: () => {
+      toast.success('Meldung eingereicht!');
+      navigate('/');
+    },
+    onError: () => {
+      toast.error('Fehler beim Einreichen');
+    },
+  });
+
+  // Close line dropdown on outside click
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent): void {
-      if (
-        lineContainerRef.current &&
-        !lineContainerRef.current.contains(e.target as Node)
-      ) {
+    function handler(e: MouseEvent): void {
+      if (lineContainerRef.current && !lineContainerRef.current.contains(e.target as Node)) {
         setLineDropdownOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close station dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent): void {
+      if (stationContainerRef.current && !stationContainerRef.current.contains(e.target as Node)) {
+        setStationDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   function selectLine(l: string): void {
     setLine(l);
     setLineQuery(l);
     setLineDropdownOpen(false);
+    // Reset station when line changes
+    setStation('');
+  }
+
+  function selectStation(name: string): void {
+    setStation(name);
+    setStationDropdownOpen(false);
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
-
     if (!line) {
       toast.error('Bitte eine Linie auswählen.');
       return;
     }
 
-    // TODO (Task 4): replace with real API call to POST /api/sightings
-    toast.success('Meldung eingereicht. Danke!');
+    // Build body without undefined properties (required by exactOptionalPropertyTypes)
+    const body: CreateSightingBody = { line };
+    if (station.trim().length > 0) body.station = station.trim();
+    if (direction.trim().length > 0) body.direction = direction.trim();
+    if (type !== null) body.type = type;
+    if (description.trim().length > 0) body.description = description.trim();
 
-    // Reset form
-    setLine('');
-    setLineQuery('');
-    setStation('');
-    setDirection('');
-    setType(null);
-    setDescription('');
+    mutation.mutate(body);
   }
+
+  const isSubmitting = mutation.isPending;
 
   return (
     <div className="px-4 pt-4 pb-8 space-y-5 max-w-xl mx-auto">
@@ -96,6 +156,7 @@ export default function ReportPage(): JSX.Element {
                 onChange={(e) => {
                   setLineQuery(e.target.value);
                   setLine('');
+                  setStation('');
                   setLineDropdownOpen(true);
                 }}
                 onFocus={() => setLineDropdownOpen(true)}
@@ -133,13 +194,36 @@ export default function ReportPage(): JSX.Element {
           <label className="text-xs text-zinc-500 uppercase tracking-widest block">
             Station
           </label>
-          <input
-            type="text"
-            value={station}
-            onChange={(e) => setStation(e.target.value)}
-            placeholder="z.B. Karlsplatz"
-            className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none"
-          />
+          <div ref={stationContainerRef} className="relative">
+            <input
+              type="text"
+              value={station}
+              onChange={(e) => {
+                setStation(e.target.value);
+                setStationDropdownOpen(true);
+              }}
+              onFocus={() => setStationDropdownOpen(true)}
+              placeholder={line ? 'Station wählen…' : 'Zuerst Linie wählen'}
+              disabled={!line}
+              className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+            />
+
+            {stationDropdownOpen && stationMatches.length > 0 && (
+              <ul className="absolute z-50 w-full border border-zinc-700 border-t-0 bg-zinc-950 max-h-48 overflow-y-auto">
+                {stationMatches.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectStation(s.name)}
+                      className="w-full px-4 py-2.5 text-sm text-left hover:bg-zinc-800 transition-colors text-zinc-300 uppercase tracking-wide"
+                    >
+                      {s.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* ── Richtung ───────────────────────────────────────── */}
@@ -185,9 +269,16 @@ export default function ReportPage(): JSX.Element {
         <div className="space-y-1">
           <div className="flex justify-between items-baseline">
             <label className="text-xs text-zinc-500 uppercase tracking-widest">
-              Beschreibung <span className="text-zinc-700 normal-case">(optional)</span>
+              Beschreibung{' '}
+              <span className="text-zinc-700 normal-case">(optional)</span>
             </label>
-            <span className={`text-xs tabular-nums ${description.length > MAX_DESC_LENGTH - 20 ? 'text-orange-400' : 'text-zinc-700'}`}>
+            <span
+              className={`text-xs tabular-nums ${
+                description.length > MAX_DESC_LENGTH - 20
+                  ? 'text-orange-400'
+                  : 'text-zinc-700'
+              }`}
+            >
               {description.length}/{MAX_DESC_LENGTH}
             </span>
           </div>
@@ -207,12 +298,12 @@ export default function ReportPage(): JSX.Element {
         {/* ── Submit ─────────────────────────────────────────── */}
         <button
           type="submit"
-          className="w-full py-4 border border-white text-sm uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors"
+          disabled={isSubmitting}
+          className="w-full py-4 border border-white text-sm uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          [ MELDUNG SENDEN ]
+          {isSubmitting ? '[ … ]' : '[ MELDUNG SENDEN ]'}
         </button>
 
-        {/* Disclaimer */}
         <p className="text-center text-xs text-zinc-700 pt-1">
           Anonym · Keine Registrierung erforderlich
         </p>

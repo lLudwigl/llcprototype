@@ -1,29 +1,39 @@
-// Line detail page — shows sightings for a single line, e.g. /linie/U4.
+// Line detail page — live sightings for a single line, e.g. /linie/U4.
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { SightingCard } from '../components/SightingCard';
 import { EmptyState } from '../components/EmptyState';
-import { MOCK_SIGHTINGS } from '../lib/mockData';
-import { getLineBadgeClass, ALL_LINES } from '../lib/lines';
+import { getSightingsByLine } from '../lib/api';
+import { queryKeys } from '../lib/queryKeys';
+import { getLineBadgeClass } from '../lib/lines';
+
+function SightingSkeleton(): JSX.Element {
+  return (
+    <div className="border border-zinc-800 bg-zinc-950 p-3 animate-pulse space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-5 bg-zinc-800" />
+        <div className="flex-1 h-4 bg-zinc-800" />
+        <div className="w-14 h-3 bg-zinc-800" />
+      </div>
+      <div className="w-36 h-3 bg-zinc-800" />
+    </div>
+  );
+}
 
 export default function LinePage(): JSX.Element {
   const { lineId } = useParams<{ lineId: string }>();
 
-  // Validate that this is a line we know about
-  const isKnownLine = lineId !== undefined && ALL_LINES.includes(lineId);
+  const { data: sightings, isLoading, isError } = useQuery({
+    queryKey: queryKeys.sightingsByLine(lineId ?? ''),
+    queryFn: () => getSightingsByLine(lineId ?? ''),
+    enabled: lineId !== undefined && lineId.length > 0,
+  });
 
-  const sightings = isKnownLine
-    ? [...MOCK_SIGHTINGS]
-        .filter((s) => s.line === lineId)
-        .sort((a, b) => b.reportedAt.getTime() - a.reportedAt.getTime())
-    : [];
-
-  if (!isKnownLine || lineId === undefined) {
+  if (!lineId) {
     return (
-      <div className="px-4 pt-8 text-center space-y-4">
-        <p className="text-zinc-500 text-sm uppercase tracking-wider">
-          Unbekannte Linie: {lineId ?? '—'}
-        </p>
-        <Link to="/" className="text-xs text-zinc-700 underline hover:text-white">
+      <div className="px-4 pt-8 text-center">
+        <p className="text-zinc-500 text-sm uppercase tracking-wider">Unbekannte Linie</p>
+        <Link to="/" className="text-xs text-zinc-700 underline hover:text-white mt-2 block">
           ← Zurück
         </Link>
       </div>
@@ -45,10 +55,25 @@ export default function LinePage(): JSX.Element {
         </h1>
       </div>
 
-      {/* Sightings */}
-      {sightings.length === 0 ? (
+      {isLoading && (
+        <div className="space-y-px">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SightingSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {isError && (
+        <p className="text-xs text-red-500 uppercase tracking-wider py-6 text-center">
+          Verbindung zur API fehlgeschlagen
+        </p>
+      )}
+
+      {sightings !== undefined && sightings.length === 0 && (
         <EmptyState lineId={lineId} />
-      ) : (
+      )}
+
+      {sightings !== undefined && sightings.length > 0 && (
         <div className="space-y-px">
           {sightings.map((s) => (
             <SightingCard
@@ -58,7 +83,7 @@ export default function LinePage(): JSX.Element {
               direction={s.direction}
               type={s.type}
               description={s.description}
-              reportedAt={s.reportedAt}
+              reportedAt={new Date(s.reported_at)}
               source={s.source}
             />
           ))}

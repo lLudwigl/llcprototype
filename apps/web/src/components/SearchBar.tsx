@@ -1,7 +1,10 @@
 // Search bar with live dropdown for Wiener Linien line selection.
-// On selection, navigates to /linie/[lineId].
+// Line list is fetched from the API; falls back to the static list while loading.
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getLines } from '../lib/api';
+import { queryKeys } from '../lib/queryKeys';
 import { ALL_LINES, getLineBadgeClass } from '../lib/lines';
 
 export function SearchBar(): JSX.Element {
@@ -10,11 +13,19 @@ export function SearchBar(): JSX.Element {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const matches = query.trim().length === 0
-    ? []
-    : ALL_LINES.filter((l) =>
-        l.toLowerCase().startsWith(query.trim().toLowerCase())
-      ).slice(0, 8);
+  // Use API lines; fall back to static list while loading or on error
+  const { data: apiLines } = useQuery({
+    queryKey: queryKeys.lines,
+    queryFn: getLines,
+  });
+  const lineIds: string[] = apiLines?.map((l) => l.id) ?? ALL_LINES;
+
+  const matches =
+    query.trim().length === 0
+      ? []
+      : lineIds
+          .filter((l) => l.toLowerCase().startsWith(query.trim().toLowerCase()))
+          .slice(0, 8);
 
   function selectLine(lineId: string): void {
     setQuery('');
@@ -32,7 +43,6 @@ export function SearchBar(): JSX.Element {
     }
   }
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent): void {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -72,7 +82,6 @@ export function SearchBar(): JSX.Element {
         )}
       </div>
 
-      {/* Dropdown suggestions */}
       {open && matches.length > 0 && (
         <ul className="absolute z-50 w-full mt-0 border border-zinc-700 border-t-0 bg-zinc-950">
           {matches.map((lineId) => (
