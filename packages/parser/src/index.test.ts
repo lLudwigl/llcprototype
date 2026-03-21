@@ -1,26 +1,20 @@
 // Parser test suite — every parser change must have a corresponding test case
-import { describe, it, expect } from 'vitest';
-import { parseMessage } from './index.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { SightingParser } from './index.js';
 
-describe('parseMessage', () => {
-  it('returns null for empty string', () => {
-    expect(parseMessage('')).toBeNull();
+describe('SightingParser', () => {
+  let parser: SightingParser;
+
+  beforeEach(async () => {
+    parser = new SightingParser();
+    await parser.init();
   });
 
-  it('returns null for whitespace-only string', () => {
-    expect(parseMessage('   ')).toBeNull();
+  it('sets shouldDiscard for empty string', () => {
+    expect(parser.parse('').shouldDiscard).toBe(true);
   });
 
-  // Real test cases will be added as the parser logic is implemented.
-  // Example shape of what a passing result will look like:
-  //
-  // it('parses a simple U-Bahn sighting', () => {
-  //   const result = parseMessage('Kontrolleure U4 Richtung Heiligenstadt, Station Karlsplatz');
-  //   expect(result).toMatchObject({
-  //     line: 'U4',
-  //     lineType: 'U',
-  //     station: 'Karlsplatz',
-  //     direction: 'Heiligenstadt',
-  //   });
-  // });
+  it('sets shouldDiscard for whitespace-only string', () => {
+    expect(parser.parse('   ').shouldDiscard).toBe(true);
+  });
 });
