@@ -55,8 +55,8 @@ export function SearchBar(): JSX.Element {
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="flex items-center border border-zinc-700 bg-zinc-950 focus-within:border-white transition-colors">
-        <span className="pl-3 text-zinc-600 text-sm select-none">{'>'}</span>
+      <div className="flex items-center bg-white border border-gray-200 rounded-xl shadow-sm focus-within:border-[#0F1B3C] focus-within:ring-2 focus-within:ring-[#0F1B3C]/10 transition-all">
+        <span className="pl-4 text-gray-400 text-base select-none">🔍</span>
         <input
           type="text"
           value={query}
@@ -66,15 +66,15 @@ export function SearchBar(): JSX.Element {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Linie suchen… z.B. U4, 13A"
-          className="flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono focus:outline-none"
+          placeholder="Linie oder Station suchen..."
+          className="flex-1 bg-transparent px-3 py-3.5 text-sm text-gray-900 placeholder-gray-400 font-sans focus:outline-none"
           autoComplete="off"
           spellCheck={false}
         />
         {query.length > 0 && (
           <button
             onClick={() => { setQuery(''); setOpen(false); }}
-            className="pr-3 text-zinc-600 hover:text-white text-sm"
+            className="pr-4 text-gray-400 hover:text-gray-600 text-lg"
             aria-label="Suche löschen"
           >
             ×
@@ -83,17 +83,17 @@ export function SearchBar(): JSX.Element {
       </div>
 
       {open && matches.length > 0 && (
-        <ul className="absolute z-50 w-full mt-0 border border-zinc-700 border-t-0 bg-zinc-950">
+        <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden">
           {matches.map((lineId) => (
             <li key={lineId}>
               <button
                 onClick={() => selectLine(lineId)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-zinc-800 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-left"
               >
-                <span className={`px-1.5 py-0.5 text-xs font-bold ${getLineBadgeClass(lineId)}`}>
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${getLineBadgeClass(lineId)}`}>
                   {lineId}
                 </span>
-                <span className="text-zinc-400 uppercase tracking-wider text-xs">
+                <span className="text-gray-700 text-sm">
                   Linie {lineId}
                 </span>
               </button>

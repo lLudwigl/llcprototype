@@ -144,29 +144,33 @@ export default function ReportPage(): JSX.Element {
 
   const isSubmitting = mutation.isPending;
 
+  // Shared input class
+  const inputClass =
+    'w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 font-sans transition-colors focus:outline-none focus:border-[#0F1B3C] focus:ring-2 focus:ring-[#0F1B3C]/10 disabled:opacity-40 disabled:cursor-not-allowed';
+
   return (
     <div className="px-4 pt-4 pb-8 space-y-5 max-w-xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-zinc-900 pb-3">
-        <Link to="/" className="text-zinc-600 hover:text-white text-xs transition-colors">
+      <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+        <Link to="/" className="text-gray-400 hover:text-[#0F1B3C] text-sm transition-colors font-semibold">
           ←
         </Link>
-        <h1 className="text-sm font-bold uppercase tracking-widest">
-          [ + ] MELDUNG EINREICHEN
+        <h1 className="text-sm font-bold uppercase tracking-widest text-[#0F1B3C]">
+          + MELDUNG EINREICHEN
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
         {/* ── Linie ──────────────────────────────────────────── */}
-        <div className="space-y-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">
             Linie <span className="text-red-500">*</span>
           </label>
           <div ref={lineContainerRef} className="relative">
-            <div className="flex items-center border border-zinc-700 bg-zinc-950 focus-within:border-white transition-colors">
+            <div className="flex items-center bg-white border border-gray-200 rounded-xl focus-within:border-[#0F1B3C] focus-within:ring-2 focus-within:ring-[#0F1B3C]/10 transition-all">
               {line && (
-                <span className={`ml-3 shrink-0 px-1.5 py-0.5 text-xs font-bold ${getLineBadgeClass(line)}`}>
+                <span className={`ml-3 shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getLineBadgeClass(line)}`}>
                   {line}
                 </span>
               )}
@@ -180,25 +184,25 @@ export default function ReportPage(): JSX.Element {
                   setLineDropdownOpen(true);
                 }}
                 onFocus={() => setLineDropdownOpen(true)}
-                placeholder="z.B. U4, 13A"
-                className="flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono focus:outline-none"
+                placeholder="z.B. U2, M10..."
+                className="flex-1 bg-transparent px-4 py-3 text-sm text-gray-900 placeholder-gray-400 font-sans focus:outline-none"
                 autoComplete="off"
               />
             </div>
 
             {lineDropdownOpen && lineMatches.length > 0 && (
-              <ul className="absolute z-50 w-full border border-zinc-700 border-t-0 bg-zinc-950 max-h-48 overflow-y-auto">
+              <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                 {lineMatches.slice(0, 10).map((l) => (
                   <li key={l}>
                     <button
                       type="button"
                       onClick={() => selectLine(l)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-zinc-800 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors text-left"
                     >
-                      <span className={`px-1.5 py-0.5 text-xs font-bold ${getLineBadgeClass(l)}`}>
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${getLineBadgeClass(l)}`}>
                         {l}
                       </span>
-                      <span className="text-zinc-400 uppercase tracking-wider text-xs">
+                      <span className="text-gray-700">
                         Linie {l}
                       </span>
                     </button>
@@ -209,9 +213,45 @@ export default function ReportPage(): JSX.Element {
           </div>
         </div>
 
+        {/* ── Richtung ───────────────────────────────────────── */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">
+            Richtung
+          </label>
+
+          {directions !== undefined && directions.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {[directions[0]!.terminus_first, directions[0]!.terminus_last].map((terminus) => (
+                <button
+                  key={terminus}
+                  type="button"
+                  onClick={() => setDirection(direction === terminus ? '' : terminus)}
+                  className={`px-4 py-3 text-sm text-left border rounded-xl transition-colors font-sans truncate ${
+                    direction === terminus
+                      ? 'border-[#0F1B3C] bg-[#0F1B3C]/5 text-[#0F1B3C] font-semibold'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 bg-white'
+                  }`}
+                  title={terminus}
+                >
+                  → {terminus}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={direction}
+              onChange={(e) => setDirection(e.target.value)}
+              disabled={!line}
+              placeholder={line ? 'Endstation...' : 'Zuerst Linie auswählen'}
+              className={inputClass}
+            />
+          )}
+        </div>
+
         {/* ── Station ────────────────────────────────────────── */}
-        <div className="space-y-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">
             Station
           </label>
           <div ref={stationContainerRef} className="relative">
@@ -223,19 +263,19 @@ export default function ReportPage(): JSX.Element {
                 setStationDropdownOpen(true);
               }}
               onFocus={() => setStationDropdownOpen(true)}
-              placeholder={line ? 'Station wählen…' : 'Zuerst Linie wählen'}
+              placeholder={line ? 'Aktueller Halt...' : 'Zuerst Linie wählen'}
               disabled={!line}
-              className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+              className={inputClass}
             />
 
             {stationDropdownOpen && stationMatches.length > 0 && (
-              <ul className="absolute z-50 w-full border border-zinc-700 border-t-0 bg-zinc-950 max-h-48 overflow-y-auto">
+              <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                 {stationMatches.map((s) => (
                   <li key={s.id}>
                     <button
                       type="button"
                       onClick={() => selectStation(s.name)}
-                      className="w-full px-4 py-2.5 text-sm text-left hover:bg-zinc-800 transition-colors text-zinc-300 uppercase tracking-wide"
+                      className="w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 transition-colors text-gray-700"
                     >
                       {s.name}
                     </button>
@@ -246,47 +286,9 @@ export default function ReportPage(): JSX.Element {
           </div>
         </div>
 
-        {/* ── Richtung ───────────────────────────────────────── */}
-        <div className="space-y-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-widest block">
-            Richtung
-          </label>
-
-          {/* Dropdown when directions are available from DB */}
-          {directions !== undefined && directions.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2">
-              {[directions[0]!.terminus_first, directions[0]!.terminus_last].map((terminus) => (
-                <button
-                  key={terminus}
-                  type="button"
-                  onClick={() => setDirection(direction === terminus ? '' : terminus)}
-                  className={`px-3 py-3 text-sm text-left border transition-colors font-mono truncate ${
-                    direction === terminus
-                      ? 'border-white text-white bg-white/10'
-                      : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
-                  }`}
-                  title={terminus}
-                >
-                  → {terminus}
-                </button>
-              ))}
-            </div>
-          ) : (
-            /* Free-text fallback: no line selected, or line has no directions in DB */
-            <input
-              type="text"
-              value={direction}
-              onChange={(e) => setDirection(e.target.value)}
-              disabled={!line}
-              placeholder={line ? 'z.B. Hütteldorf' : 'Zuerst Linie auswählen'}
-              className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
-            />
-          )}
-        </div>
-
         {/* ── Typ ────────────────────────────────────────────── */}
-        <div className="space-y-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">
             Typ
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -295,32 +297,32 @@ export default function ReportPage(): JSX.Element {
                 key={t}
                 type="button"
                 onClick={() => setType(type === t ? null : t)}
-                className={`py-3 text-sm uppercase tracking-widest font-bold border transition-colors ${
+                className={`py-3 text-sm uppercase tracking-widest font-bold border rounded-xl transition-colors ${
                   type === t
                     ? t === 'mobil'
-                      ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10'
-                      : 'border-orange-500 text-orange-400 bg-orange-500/10'
-                    : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                      ? 'border-rose-300 text-rose-500 bg-rose-50'
+                      : 'border-gray-300 text-gray-600 bg-gray-50'
+                    : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 bg-white'
                 }`}
               >
-                {t === 'mobil' ? 'MOBIL' : 'STATIONÄR'}
+                {t === 'mobil' ? '⚡ MOBIL' : '📍 STATIONÄR'}
               </button>
             ))}
           </div>
         </div>
 
         {/* ── Beschreibung ───────────────────────────────────── */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="flex justify-between items-baseline">
-            <label className="text-xs text-zinc-500 uppercase tracking-widest">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
               Beschreibung{' '}
-              <span className="text-zinc-700 normal-case">(optional)</span>
+              <span className="text-gray-400 normal-case font-normal">(optional)</span>
             </label>
             <span
               className={`text-xs tabular-nums ${
                 description.length > MAX_DESC_LENGTH - 20
                   ? 'text-orange-400'
-                  : 'text-zinc-700'
+                  : 'text-gray-300'
               }`}
             >
               {description.length}/{MAX_DESC_LENGTH}
@@ -333,9 +335,9 @@ export default function ReportPage(): JSX.Element {
                 setDescription(e.target.value);
               }
             }}
-            placeholder="Weitere Details…"
+            placeholder="Besondere Merkmale, Anzahl der Kontrolleure..."
             rows={3}
-            className="w-full bg-zinc-950 border border-zinc-700 focus:border-white px-3 py-3 text-sm text-white placeholder-zinc-600 font-mono transition-colors focus:outline-none resize-none"
+            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 font-sans transition-colors focus:outline-none focus:border-[#0F1B3C] focus:ring-2 focus:ring-[#0F1B3C]/10 resize-none"
           />
         </div>
 
@@ -343,90 +345,101 @@ export default function ReportPage(): JSX.Element {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 border border-white text-sm uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 bg-[#0F1B3C] text-white text-sm uppercase tracking-widest font-bold rounded-xl hover:bg-[#0b1530] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? '[ … ]' : '[ MELDUNG SENDEN ]'}
+          {isSubmitting ? '…' : '➤  [ MELDUNG SENDEN ]'}
         </button>
 
-        <p className="text-center text-xs text-zinc-700 pt-1">
-          Anonym · Keine Registrierung erforderlich
+        <p className="text-center text-xs text-gray-400">
+          Durch das Absenden bestätigen Sie die Richtigkeit Ihrer Angaben.
         </p>
       </form>
 
       {/* ── Confirmation modal ─────────────────────────────── */}
       {showConfirmModal && pendingBody && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 px-4 pb-6 sm:pb-0">
-          <div className="w-full max-w-sm border border-zinc-700 bg-zinc-950 p-5 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-6 sm:pb-0">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-            <h2 className="text-xs font-bold uppercase tracking-widest border-b border-zinc-800 pb-3">
-              [ ! ] MELDUNG PRÜFEN
-            </h2>
+            {/* Modal header */}
+            <div className="bg-[#0F1B3C] px-5 py-4 flex items-center gap-2">
+              <span className="text-white text-base">+</span>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-white">
+                MELDUNG PRÜFEN
+              </h2>
+            </div>
 
-            {/* Summary rows */}
-            <dl className="space-y-2 text-sm font-mono">
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Linie</dt>
-                <dd>
-                  <span className={`px-1.5 py-0.5 text-xs font-bold ${getLineBadgeClass(pendingBody.line)}`}>
-                    {pendingBody.line}
-                  </span>
-                </dd>
-              </div>
-
-              {pendingBody.station && (
+            <div className="p-5 space-y-4">
+              {/* Summary rows */}
+              <dl className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Station</dt>
-                  <dd className="text-zinc-200 text-right">{pendingBody.station}</dd>
-                </div>
-              )}
-
-              {pendingBody.direction && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Richtung</dt>
-                  <dd className="text-zinc-200 text-right">→ {pendingBody.direction}</dd>
-                </div>
-              )}
-
-              {pendingBody.type && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500 uppercase tracking-wider text-xs shrink-0">Typ</dt>
-                  <dd className={`text-xs font-bold uppercase ${pendingBody.type === 'mobil' ? 'text-yellow-400' : 'text-orange-400'}`}>
-                    {pendingBody.type === 'mobil' ? 'MOBIL' : 'STATIONÄR'}
+                  <dt className="text-gray-400 uppercase tracking-wider text-xs shrink-0 font-semibold">Linie</dt>
+                  <dd>
+                    <span className={`w-8 h-8 rounded-lg inline-flex items-center justify-center text-xs font-bold ${getLineBadgeClass(pendingBody.line)}`}>
+                      {pendingBody.line}
+                    </span>
                   </dd>
                 </div>
-              )}
 
-              {pendingBody.description && (
-                <div className="flex flex-col gap-1">
-                  <dt className="text-zinc-500 uppercase tracking-wider text-xs">Beschreibung</dt>
-                  <dd className="text-zinc-300 text-xs leading-relaxed border-l border-zinc-700 pl-3">{pendingBody.description}</dd>
-                </div>
-              )}
+                {pendingBody.station && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-400 uppercase tracking-wider text-xs shrink-0 font-semibold">Station</dt>
+                    <dd className="text-gray-800 text-right text-sm">{pendingBody.station}</dd>
+                  </div>
+                )}
 
-              {/* If only line was filled in */}
-              {!pendingBody.station && !pendingBody.direction && !pendingBody.type && !pendingBody.description && (
-                <p className="text-zinc-600 text-xs">Keine weiteren Details angegeben.</p>
-              )}
-            </dl>
+                {pendingBody.direction && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-400 uppercase tracking-wider text-xs shrink-0 font-semibold">Richtung</dt>
+                    <dd className="text-gray-800 text-right text-sm">→ {pendingBody.direction}</dd>
+                  </div>
+                )}
 
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(false)}
-                disabled={isSubmitting}
-                className="py-3 text-xs uppercase tracking-widest font-bold border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-40"
-              >
-                ← BEARBEITEN
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                disabled={isSubmitting}
-                className="py-3 text-xs uppercase tracking-widest font-bold border border-white text-white hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? '[ … ]' : '[ SENDEN ]'}
-              </button>
+                {pendingBody.type && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-400 uppercase tracking-wider text-xs shrink-0 font-semibold">Typ</dt>
+                    <dd>
+                      <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full ${
+                        pendingBody.type === 'mobil'
+                          ? 'bg-rose-100 text-rose-500'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {pendingBody.type === 'mobil' ? 'MOBIL' : 'STATIONÄR'}
+                      </span>
+                    </dd>
+                  </div>
+                )}
+
+                {pendingBody.description && (
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-gray-400 uppercase tracking-wider text-xs font-semibold">Beschreibung</dt>
+                    <dd className="text-gray-700 text-xs leading-relaxed border-l-2 border-gray-200 pl-3">{pendingBody.description}</dd>
+                  </div>
+                )}
+
+                {!pendingBody.station && !pendingBody.direction && !pendingBody.type && !pendingBody.description && (
+                  <p className="text-gray-400 text-xs">Keine weiteren Details angegeben.</p>
+                )}
+              </dl>
+
+              {/* Actions */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isSubmitting}
+                  className="py-3 text-xs uppercase tracking-widest font-bold border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-40"
+                >
+                  ← BEARBEITEN
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={isSubmitting}
+                  className="py-3 text-xs uppercase tracking-widest font-bold bg-[#0F1B3C] text-white rounded-xl hover:bg-[#0b1530] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? '…' : '[ SENDEN ]'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

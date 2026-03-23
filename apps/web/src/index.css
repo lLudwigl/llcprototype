@@ -3,36 +3,44 @@
 @tailwind utilities;
 
 @layer base {
-  /* Force dark terminal base across the entire app */
   html,
   body,
   #root {
-    @apply bg-black text-white font-mono;
-    min-height: 100dvh;
+    @apply text-gray-900 font-sans;
+    height: 100dvh;
+    overflow: hidden;
+    /* Desktop bg: shown around the phone frame */
+    background-color: #1a1a2e;
   }
 
-  /* Remove default focus outlines, replace with our own */
   *:focus {
     outline: none;
   }
 
-  /* Scrollbar: minimal, dark */
   ::-webkit-scrollbar {
     width: 4px;
   }
   ::-webkit-scrollbar-track {
-    background: black;
+    background: #f1f5f9;
   }
   ::-webkit-scrollbar-thumb {
-    background: #3f3f46; /* zinc-700 */
+    background: #cbd5e1;
   }
 }
 
 @layer components {
-  /* Reusable bracket-style button */
-  .btn-terminal {
-    @apply font-mono uppercase tracking-widest border border-white text-white
-           px-4 py-2 text-sm transition-colors
-           hover:bg-white hover:text-black active:bg-zinc-200;
+  /* Primary navy button */
+  .btn-primary {
+    @apply bg-[#0F1B3C] text-white font-bold uppercase tracking-widest
+           px-4 py-3 text-sm transition-colors rounded-xl
+           hover:bg-[#0b1530] active:bg-[#070e1e]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost button with navy border */
+  .btn-ghost {
+    @apply border border-[#c5cde3] text-[#0F1B3C] font-semibold uppercase tracking-widest
+           px-4 py-3 text-sm transition-colors rounded-xl
+           hover:bg-[#e8ebf3] active:bg-[#c5cde3];
   }
 }

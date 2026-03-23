@@ -1,4 +1,4 @@
-// Displays a single controller sighting in the terminal card style.
+// Displays a single controller sighting as a clean card.
 import { getLineBadgeClass } from '../lib/lines';
 import { timeAgo } from '../lib/timeAgo';
 
@@ -22,59 +22,54 @@ export function SightingCard({
   source,
 }: SightingCardProps): JSX.Element {
   return (
-    <article className="border border-zinc-800 bg-zinc-950 p-3 space-y-1.5">
-      {/* Row 1: line badge | station | time ago */}
-      <div className="flex items-center gap-2">
-        <span
-          className={`shrink-0 px-1.5 py-0.5 text-xs font-bold tracking-wider ${getLineBadgeClass(line)}`}
-        >
-          {line}
-        </span>
+    <article className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+      {/* Line badge — colored square */}
+      <span
+        className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold tracking-wide ${getLineBadgeClass(line)}`}
+      >
+        {line}
+      </span>
 
-        <span className="flex-1 text-sm font-semibold uppercase tracking-wider truncate">
+      {/* Middle: station + direction */}
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-gray-900 text-sm truncate">
           {station ?? '—'}
-        </span>
-
-        <span className="shrink-0 text-xs text-zinc-500 tabular-nums">
-          {timeAgo(reportedAt)}
-        </span>
+        </p>
+        {direction !== null && (
+          <p className="text-xs text-gray-400 mt-0.5 truncate">
+            → {direction}
+          </p>
+        )}
+        {description !== null && (
+          <p className="text-xs text-gray-400 mt-0.5 italic truncate">
+            {description}
+          </p>
+        )}
       </div>
 
-      {/* Row 2: direction + type chip (only if at least one is present) */}
-      {(direction !== null || type !== null) && (
-        <div className="flex items-center gap-3 pl-0">
-          {direction !== null && (
-            <span className="text-xs text-zinc-400">
-              → {direction}
-            </span>
-          )}
-          {type !== null && (
-            <span
-              className={`text-xs border px-1.5 py-0.5 uppercase tracking-widest font-semibold ${
-                type === 'mobil'
-                  ? 'border-yellow-500 text-yellow-400'
-                  : 'border-orange-500 text-orange-400'
-              }`}
-            >
-              {type}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Row 3: free-text description */}
-      {description !== null && (
-        <p className="text-xs text-zinc-500 italic leading-relaxed">
-          {description}
-        </p>
-      )}
-
-      {/* Source indicator — bottom-right */}
-      <div className="flex justify-end">
-        <span className="text-[10px] text-zinc-700 uppercase tracking-widest">
+      {/* Right: type chip + time + source */}
+      <div className="shrink-0 flex flex-col items-end gap-1">
+        {type !== null && (
+          <span
+            className={`text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+              type === 'mobil'
+                ? 'bg-rose-100 text-rose-500'
+                : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            {type === 'mobil' ? 'MOBIL' : 'STATIONÄR'}
+          </span>
+        )}
+        <span className="text-xs text-gray-400 tabular-nums uppercase tracking-wider">
+          {timeAgo(reportedAt)}
+        </span>
+        <span className="text-[10px] text-gray-300 uppercase tracking-widest">
           {source === 'telegram' ? 'TG' : 'APP'}
         </span>
       </div>
+
+      {/* Chevron */}
+      <span className="shrink-0 text-gray-300 text-sm">›</span>
     </article>
   );
 }
