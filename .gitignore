@@ -22,6 +22,9 @@ progresslogs/
 apps/api/src/bot/test.ts
 apps/api/.env
 
+# Telegram session (contains auth credentials — never commit)
+.telegram-session
+
 # OS / editor
 .DS_Store
 Thumbs.db

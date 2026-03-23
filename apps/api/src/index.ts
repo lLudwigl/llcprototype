@@ -8,6 +8,7 @@ import cors from '@fastify/cors';
 import healthRoutes from './routes/health.js';
 import sightingsRoutes from './routes/sightings.js';
 import linesRoutes from './routes/lines.js';
+import { startTelegramListener } from './telegram/listener.js';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
@@ -38,3 +39,9 @@ try {
   app.log.error(err);
   process.exit(1);
 }
+
+// Start the Telegram listener after the API server is up.
+// Runs in the background — a failure here should not take down the HTTP server.
+startTelegramListener().catch((err) => {
+  app.log.error(err, 'Telegram listener failed to start');
+});
