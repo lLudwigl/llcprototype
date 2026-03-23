@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
+    "@schwarzkappler/parser": "workspace:*",
     "dotenv": "^17.3.1",
     "fastify": "^4.28.1",
     "grammy": "^1.41.1",
